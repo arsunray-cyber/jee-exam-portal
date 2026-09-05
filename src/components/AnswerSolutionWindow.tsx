@@ -14,9 +14,11 @@ import {
   ArrowUpDown,
   Zap,
   HelpCircle,
-  Award
+  Award,
+  Home,
+  ChevronRight,
 } from 'lucide-react';
-import { SUBJECT_METADATA } from '../data/questions';
+import { SUBJECT_METADATA, YEARS_AVAILABLE } from '../data/questions';
 
 interface AnswerSolutionWindowProps {
   isOpen: boolean;
@@ -156,19 +158,28 @@ export const AnswerSolutionWindow: React.FC<AnswerSolutionWindowProps> = ({
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-5xl h-[92vh] rounded-xl shadow-2xl border border-slate-300 flex flex-col overflow-hidden text-slate-900">
         {/* Modal Top Header */}
-        <div className="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center">
-              <BookOpen className="w-4 h-4" />
+        <div className="bg-slate-900 text-white px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <button
+              onClick={onClose}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold transition cursor-pointer shadow-xs"
+              title="Return to Home Screen"
+            >
+              <Home className="w-3.5 h-3.5 text-sky-400" />
+              <span>Home</span>
+            </button>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+            <div className="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center">
+              <BookOpen className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h2 className="text-base font-bold tracking-wide flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-bold tracking-wide flex items-center gap-2">
                 <span>Answers & Question Time Tracking Console</span>
-                <span className="text-xs font-normal text-sky-300 bg-sky-950 px-2 py-0.5 rounded border border-sky-800">
-                  5-Year Solved Bank (2020-2024)
+                <span className="text-[10px] sm:text-xs font-normal text-sky-300 bg-sky-950 px-2 py-0.5 rounded border border-sky-800 hidden sm:inline">
+                  15-Year Solved Archive (2010-2024)
                 </span>
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-[11px] sm:text-xs text-slate-400">
                 Inspect official answers, detailed step-by-step solutions, and time spent on each question.
               </p>
             </div>
@@ -269,12 +280,12 @@ export const AnswerSolutionWindow: React.FC<AnswerSolutionWindowProps> = ({
               }
               className="bg-slate-100 border border-slate-300 rounded px-2.5 py-1 text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-sky-500"
             >
-              <option value="all">All Years (2020 - 2024)</option>
-              <option value={2024}>JEE 2024</option>
-              <option value={2023}>JEE 2023</option>
-              <option value={2022}>JEE 2022</option>
-              <option value={2021}>JEE 2021</option>
-              <option value={2020}>JEE 2020</option>
+              <option value="all">All Years (2010 - 2024)</option>
+              {YEARS_AVAILABLE.map((yr) => (
+                <option key={yr} value={yr}>
+                  JEE {yr}
+                </option>
+              ))}
             </select>
 
             {/* Status Selector */}

@@ -20,8 +20,10 @@ import GoogleAuthButton from './components/GoogleAuthButton';
 import {
   SubmitConfirmationModal,
   QuestionPaperModal,
-  InstructionsModal
+  InstructionsModal,
+  LeaveExamModal,
 } from './components/TestModals';
+import { Home, ChevronRight } from 'lucide-react';
 
 const STORAGE_KEY = 'jee_mains_cbt_test_history_v1';
 const USER_STORAGE_KEY = 'jee_mains_cbt_google_user_v1';
@@ -71,8 +73,11 @@ export default function App() {
   // Modals & Panels
   const [isAnswerWindowOpen, setIsAnswerWindowOpen] = useState<boolean>(false);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState<boolean>(false);
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState<boolean>(false);
   const [isQuestionPaperModalOpen, setIsQuestionPaperModalOpen] = useState<boolean>(false);
   const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState<boolean>(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authModalReason, setAuthModalReason] = useState<string>('');
 
   // Analytics & History
   const [currentResult, setCurrentResult] = useState<TestResult | null>(null);
@@ -90,7 +95,7 @@ export default function App() {
     subjectFilter: 'all',
     mode: 'exam',
     durationMinutes: 60,
-    title: 'JEE (Main) - 5-Year Comprehensive Mock Test',
+    title: 'JEE (Main) - 15-Year Comprehensive Mock Test (2010-2024)',
   });
 
   // Load Past History from LocalStorage
@@ -192,6 +197,15 @@ export default function App() {
     mode: 'exam' | 'practice';
     durationMinutes: number;
   }) => {
+    // Strictly require login: without login no one should be able to start the exam
+    if (!currentUser) {
+      setAuthModalReason(
+        'Candidate Authentication Required: You must sign in with your Google account to start the JEE (Main) CBT examination and record your mock attempt.'
+      );
+      setIsAuthModalOpen(true);
+      return;
+    }
+
     // Filter questions based on configuration
     let filtered = [...JEE_PREVIOUS_YEAR_QUESTIONS];
     if (config.year !== 'all') {
@@ -202,7 +216,7 @@ export default function App() {
     }
 
     // Determine exam title
-    const yearLabel = config.year === 'all' ? '5-Year All Papers' : `JEE Main ${config.year}`;
+    const yearLabel = config.year === 'all' ? '15-Year Archive (2010-2024)' : `JEE Main ${config.year}`;
     const subjLabel =
       config.subjectFilter === 'all'
         ? 'Full Test (Phy, Chem, Math)'
@@ -579,6 +593,10 @@ export default function App() {
           user={currentUser}
           onLogin={handleUserLogin}
           onLogout={handleUserLogout}
+          isAuthModalOpen={isAuthModalOpen}
+          setIsAuthModalOpen={setIsAuthModalOpen}
+          authModalReason={authModalReason}
+          setAuthModalReason={setAuthModalReason}
         />
       )}
 
@@ -594,7 +612,10 @@ export default function App() {
             onOpenQuestionPaper={() => setIsQuestionPaperModalOpen(true)}
             onOpenAnswerWindow={() => setIsAnswerWindowOpen(true)}
             onSubmitExam={() => setIsSubmitModalOpen(true)}
+            onLeaveExam={() => setIsLeaveModalOpen(true)}
             examTitle={examConfig.title}
+            currentQuestionNumber={currentIdxInSubject + 1}
+            totalQuestionsInSubject={subjectQuestions.length}
             isPracticeMode={examConfig.mode === 'practice'}
             user={currentUser}
             onLogin={handleUserLogin}
@@ -640,28 +661,45 @@ export default function App() {
       {/* 3. PERFORMANCE ANALYTICS VIEW */}
       {view === 'analytics' && currentResult && (
         <div className="flex-1 flex flex-col min-h-screen">
-          <nav className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-sky-600 flex items-center justify-center font-bold text-white text-xs">
-                JEE
+          <nav className="bg-slate-900 border-b border-slate-800 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            {/* Breadcrumbs with Home Button */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <button
+                id="analytics-home-btn"
+                onClick={() => setView('setup')}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer shadow-xs"
+                title="Return to Home Screen"
+              >
+                <Home className="w-3.5 h-3.5 text-sky-400" />
+                <span>Home</span>
+              </button>
+
+              <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded bg-sky-600 flex items-center justify-center font-bold text-white text-xs">
+                  JEE
+                </div>
+                <span className="text-white font-bold text-xs sm:text-sm">
+                  Performance Analytics & Scorecard
+                </span>
               </div>
-              <span className="text-white font-bold text-sm sm:text-base">
-                Performance Analytics & Scorecard
-              </span>
             </div>
-            <div className="flex items-center gap-3">
+
+            <div className="flex items-center gap-2 sm:gap-3 ml-auto">
               <VersionBadge compact={true} />
               <button
                 onClick={() => setIsAnswerWindowOpen(true)}
-                className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded text-xs transition"
+                className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded text-xs transition cursor-pointer"
               >
                 Inspect Answers & Question Time
               </button>
               <button
                 onClick={() => setView('setup')}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded text-xs transition"
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded text-xs transition flex items-center gap-1.5 cursor-pointer font-medium"
               >
-                Back to Home
+                <Home className="w-3.5 h-3.5 text-slate-400" />
+                <span>Back to Home</span>
               </button>
               <GoogleAuthButton
                 user={currentUser}
@@ -714,6 +752,28 @@ export default function App() {
       <InstructionsModal
         isOpen={isInstructionsModalOpen}
         onClose={() => setIsInstructionsModalOpen(false)}
+      />
+
+      {/* (E) Leave / Exit Exam Modal */}
+      <LeaveExamModal
+        isOpen={isLeaveModalOpen}
+        onClose={() => setIsLeaveModalOpen(false)}
+        onConfirmDiscardAndExit={() => {
+          setIsLeaveModalOpen(false);
+          setView('setup');
+        }}
+        onConfirmSubmitAndExit={() => {
+          setIsLeaveModalOpen(false);
+          handleFinalSubmit();
+        }}
+        answeredCount={
+          questions.filter((q) => {
+            const r = userResponses[q.id];
+            return r?.status === 'answered' || r?.status === 'answered_marked_for_review';
+          }).length
+        }
+        totalQuestions={questions.length}
+        timeSpentSeconds={Math.max(0, examConfig.durationMinutes * 60 - timeRemainingSeconds)}
       />
     </div>
   );

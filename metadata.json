@@ -1,6 +1,6 @@
 {
   "name": "JEE Mains CBT Exam & Performance Analytics",
-  "description": "NTA-style JEE Mains Computer Based Test platform with 5 years previous year questions (2020-2024), per-question time tracking, instant solution window, and deep performance analytics.",
+  "description": "NTA-style JEE Mains Computer Based Test platform with 15 years previous year questions (2010-2024), authenticated candidate access, per-question time tracking, instant solution window, and deep performance analytics.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

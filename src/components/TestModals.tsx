@@ -2,7 +2,7 @@ import React from 'react';
 import { Question, Subject, UserQuestionResponse } from '../types';
 import { SUBJECT_METADATA } from '../data/questions';
 import { MathRenderer } from './MathRenderer';
-import { X, AlertCircle, CheckCircle2, HelpCircle, FileText } from 'lucide-react';
+import { X, AlertCircle, CheckCircle2, HelpCircle, FileText, LogOut, Home } from 'lucide-react';
 
 // ==========================================
 // 1. Submit Test Confirmation Modal
@@ -363,3 +363,146 @@ export const InstructionsModal: React.FC<InstructionsModalProps> = ({ isOpen, on
     </div>
   );
 };
+
+// ==========================================
+// 4. Leave / Exit Exam Confirmation Modal
+// ==========================================
+interface LeaveExamModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirmDiscardAndExit: () => void;
+  onConfirmSubmitAndExit: () => void;
+  answeredCount: number;
+  totalQuestions: number;
+  timeSpentSeconds: number;
+}
+
+export const LeaveExamModal: React.FC<LeaveExamModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirmDiscardAndExit,
+  onConfirmSubmitAndExit,
+  answeredCount,
+  totalQuestions,
+  timeSpentSeconds,
+}) => {
+  if (!isOpen) return null;
+
+  const formatTime = (secs: number) => {
+    const mins = Math.floor(secs / 60);
+    const remSecs = secs % 60;
+    return `${mins}m ${remSecs}s`;
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
+      <div className="bg-white w-full max-w-lg rounded-xl shadow-2xl border border-slate-300 overflow-hidden text-slate-900">
+        {/* Header */}
+        <div className="bg-rose-950 text-white px-5 py-3.5 flex items-center justify-between border-b border-rose-900">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-rose-600/30 border border-rose-500/40 flex items-center justify-center text-rose-300">
+              <LogOut className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-rose-200">
+                Leave Examination Session?
+              </h2>
+              <p className="text-[11px] text-rose-300/80">
+                NTA CBT Session Exit Verification
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-rose-300 hover:text-white p-1 rounded hover:bg-rose-900/50 transition cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 space-y-4 text-xs sm:text-sm">
+          <p className="text-slate-700 leading-relaxed">
+            You are about to leave your active test session. Please select how you would like to proceed:
+          </p>
+
+          {/* Quick Progress Snapshot */}
+          <div className="grid grid-cols-3 gap-2 bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
+            <div>
+              <div className="text-[11px] text-slate-500 font-medium uppercase">Answered</div>
+              <div className="text-base font-bold text-emerald-600 font-mono">
+                {answeredCount}{' '}
+                <span className="text-xs text-slate-400 font-normal">/ {totalQuestions}</span>
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 font-medium uppercase">Remaining</div>
+              <div className="text-base font-bold text-slate-700 font-mono">
+                {Math.max(0, totalQuestions - answeredCount)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 font-medium uppercase">Time Elapsed</div>
+              <div className="text-base font-bold text-sky-600 font-mono">
+                {formatTime(timeSpentSeconds)}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2.5 pt-1">
+            <div className="border border-emerald-200 bg-emerald-50/70 p-3 rounded-lg flex items-start gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div>
+                <div className="font-bold text-emerald-900 text-xs">Submit & View Analytics</div>
+                <div className="text-[11px] text-emerald-700 leading-snug">
+                  Finish test with current responses, calculate official percentile & review solutions.
+                </div>
+              </div>
+            </div>
+
+            <div className="border border-rose-200 bg-rose-50/70 p-3 rounded-lg flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <div className="font-bold text-rose-900 text-xs">Discard & Exit to Home</div>
+                <div className="text-[11px] text-rose-700 leading-snug">
+                  Abort current test session and return to the Home launchpad without saving an official scorecard.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Actions */}
+        <div className="bg-slate-50 border-t border-slate-200 px-5 py-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-200 rounded-md border border-slate-300 transition cursor-pointer"
+          >
+            Resume Exam
+          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              id="confirm-discard-leave-btn"
+              onClick={onConfirmDiscardAndExit}
+              className="px-3.5 py-2 font-semibold text-rose-700 hover:bg-rose-100 hover:text-rose-800 rounded-md border border-rose-300 transition cursor-pointer flex items-center gap-1.5"
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>Discard & Exit to Home</span>
+            </button>
+
+            <button
+              id="confirm-submit-leave-btn"
+              onClick={onConfirmSubmitAndExit}
+              className="px-4 py-2 font-bold bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-md shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Submit & View Report</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+

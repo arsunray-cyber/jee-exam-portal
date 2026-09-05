@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, LogOut, CheckCircle, ShieldCheck, Mail, Sparkles, X, ChevronDown } from 'lucide-react';
+import { User, LogOut, CheckCircle, ShieldCheck, Mail, Sparkles, X, ChevronDown, Lock } from 'lucide-react';
 import { GoogleUser } from '../types';
 
 interface GoogleAuthButtonProps {
@@ -7,6 +7,9 @@ interface GoogleAuthButtonProps {
   onLogin: (user: GoogleUser) => void;
   onLogout: () => void;
   compact?: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  requiredReasonMessage?: string;
 }
 
 // Global window declaration for Google Identity Services
@@ -47,8 +50,17 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
   onLogin,
   onLogout,
   compact = false,
+  isOpen,
+  onOpenChange,
+  requiredReasonMessage,
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [internalModalOpen, setInternalModalOpen] = useState(false);
+  const isModalOpen = isOpen !== undefined ? isOpen : internalModalOpen;
+  const setModalOpen = (open: boolean) => {
+    setInternalModalOpen(open);
+    if (onOpenChange) onOpenChange(open);
+  };
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const googleBtnContainerRef = useRef<HTMLDivElement>(null);
 
@@ -80,7 +92,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
                     loginTimestamp: Date.now(),
                   };
                   onLogin(loggedInUser);
-                  setIsModalOpen(false);
+                  setModalOpen(false);
                 }
               }
             },
@@ -121,7 +133,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
       loginTimestamp: Date.now(),
     };
     onLogin(candidateUser);
-    setIsModalOpen(false);
+    setModalOpen(false);
   };
 
   // If user is already authenticated
@@ -219,7 +231,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
     <>
       <button
         id="google-login-trigger-btn"
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => setModalOpen(true)}
         className={`flex items-center gap-2 rounded-lg font-medium transition cursor-pointer ${
           compact
             ? 'bg-white hover:bg-slate-100 text-slate-900 px-2.5 py-1 text-xs shadow-xs font-semibold'
@@ -280,12 +292,19 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
                 </div>
               </div>
               <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+                onClick={() => setModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {requiredReasonMessage && (
+              <div className="bg-amber-500/15 border border-amber-500/40 rounded-xl p-3 text-xs text-amber-200 flex items-start gap-2.5">
+                <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">{requiredReasonMessage}</span>
+              </div>
+            )}
 
             <div className="space-y-4">
               <p className="text-xs text-slate-300 leading-relaxed">
@@ -360,7 +379,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
 
             <div className="flex justify-end pt-2 border-t border-slate-800">
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => setModalOpen(false)}
                 className="text-slate-400 hover:text-white text-xs px-3 py-1.5 rounded-lg transition"
               >
                 Cancel
