@@ -83,3 +83,15 @@ export interface FilterOptions {
   status: 'all' | 'correct' | 'incorrect' | 'unattempted' | 'marked';
   difficulty?: 'all' | 'Easy' | 'Medium' | 'Hard';
 }
+
+export interface GoogleUser {
+  id: string;
+  name: string;
+  email: string;
+  picture?: string;
+  givenName?: string;
+  familyName?: string;
+  candidateRollNumber?: string;
+  provider: 'google';
+  loginTimestamp: number;
+}

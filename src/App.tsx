@@ -5,7 +5,8 @@ import {
   UserQuestionResponse,
   TestResult,
   QuestionStatus,
-  SubjectStats
+  SubjectStats,
+  GoogleUser
 } from './types';
 import { JEE_PREVIOUS_YEAR_QUESTIONS } from './data/questions';
 import CBTHeader from './components/CBTHeader';
@@ -14,6 +15,8 @@ import QuestionPalette from './components/QuestionPalette';
 import AnswerSolutionWindow from './components/AnswerSolutionWindow';
 import PerformanceAnalytics from './components/PerformanceAnalytics';
 import ExamSetupView from './components/ExamSetupView';
+import VersionBadge from './components/VersionBadge';
+import GoogleAuthButton from './components/GoogleAuthButton';
 import {
   SubmitConfirmationModal,
   QuestionPaperModal,
@@ -21,10 +24,39 @@ import {
 } from './components/TestModals';
 
 const STORAGE_KEY = 'jee_mains_cbt_test_history_v1';
+const USER_STORAGE_KEY = 'jee_mains_cbt_google_user_v1';
 
 export default function App() {
   // Navigation View State
   const [view, setView] = useState<'setup' | 'exam' | 'analytics'>('setup');
+
+  // Google User Authentication State
+  const [currentUser, setCurrentUser] = useState<GoogleUser | null>(() => {
+    try {
+      const savedUser = localStorage.getItem(USER_STORAGE_KEY);
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleUserLogin = (user: GoogleUser) => {
+    setCurrentUser(user);
+    try {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    } catch (e) {
+      console.warn('Could not save user to localStorage', e);
+    }
+  };
+
+  const handleUserLogout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem(USER_STORAGE_KEY);
+    } catch (e) {
+      console.warn('Could not clear user from localStorage', e);
+    }
+  };
 
   // Active Questions List
   const [questions, setQuestions] = useState<Question[]>(JEE_PREVIOUS_YEAR_QUESTIONS);
@@ -544,6 +576,9 @@ export default function App() {
             }
           }}
           pastResults={pastResults}
+          user={currentUser}
+          onLogin={handleUserLogin}
+          onLogout={handleUserLogout}
         />
       )}
 
@@ -561,6 +596,9 @@ export default function App() {
             onSubmitExam={() => setIsSubmitModalOpen(true)}
             examTitle={examConfig.title}
             isPracticeMode={examConfig.mode === 'practice'}
+            user={currentUser}
+            onLogin={handleUserLogin}
+            onLogout={handleUserLogout}
           />
 
           {/* Main Layout: Question Area (left/center) + Question Palette (right) */}
@@ -612,6 +650,7 @@ export default function App() {
               </span>
             </div>
             <div className="flex items-center gap-3">
+              <VersionBadge compact={true} />
               <button
                 onClick={() => setIsAnswerWindowOpen(true)}
                 className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded text-xs transition"
@@ -624,6 +663,12 @@ export default function App() {
               >
                 Back to Home
               </button>
+              <GoogleAuthButton
+                user={currentUser}
+                onLogin={handleUserLogin}
+                onLogout={handleUserLogout}
+                compact={true}
+              />
             </div>
           </nav>
 

@@ -1,7 +1,9 @@
 import React from 'react';
 import { Clock, HelpCircle, FileText, CheckCircle2, User, Sparkles, BookOpen } from 'lucide-react';
-import { Subject } from '../types';
+import { Subject, GoogleUser } from '../types';
 import { SUBJECT_METADATA } from '../data/questions';
+import VersionBadge from './VersionBadge';
+import GoogleAuthButton from './GoogleAuthButton';
 
 interface CBTHeaderProps {
   currentSubject: Subject;
@@ -13,6 +15,9 @@ interface CBTHeaderProps {
   onSubmitExam: () => void;
   examTitle: string;
   isPracticeMode?: boolean;
+  user: GoogleUser | null;
+  onLogin: (u: GoogleUser) => void;
+  onLogout: () => void;
 }
 
 export const CBTHeader: React.FC<CBTHeaderProps> = ({
@@ -25,6 +30,9 @@ export const CBTHeader: React.FC<CBTHeaderProps> = ({
   onSubmitExam,
   examTitle,
   isPracticeMode = false,
+  user,
+  onLogin,
+  onLogout,
 }) => {
   const formatTime = (secs: number) => {
     const hours = Math.floor(secs / 3600);
@@ -56,13 +64,26 @@ export const CBTHeader: React.FC<CBTHeaderProps> = ({
           )}
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-700/70">
-            <User className="w-3.5 h-3.5 text-sky-400" />
-            <span className="text-slate-300 font-medium">Candidate:</span>
-            <span className="text-white font-semibold">AR. SunRay</span>
-            <span className="text-slate-500">|</span>
-            <span className="text-slate-400 font-mono text-[11px]">Roll: 2403019842</span>
+        <div className="flex items-center gap-3">
+          <VersionBadge compact={true} />
+
+          <div className="hidden md:flex items-center">
+            {user ? (
+              <GoogleAuthButton
+                user={user}
+                onLogin={onLogin}
+                onLogout={onLogout}
+                compact={true}
+              />
+            ) : (
+              <div className="flex items-center gap-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-700/70">
+                <User className="w-3.5 h-3.5 text-sky-400" />
+                <span className="text-slate-300 font-medium">Candidate:</span>
+                <span className="text-white font-semibold">AR. SunRay</span>
+                <span className="text-slate-500">|</span>
+                <span className="text-slate-400 font-mono text-[11px]">Roll: 2403019842</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">

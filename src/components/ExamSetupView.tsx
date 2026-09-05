@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Subject, TestResult } from '../types';
+import { Subject, TestResult, GoogleUser } from '../types';
 import { YEARS_AVAILABLE, SUBJECT_METADATA } from '../data/questions';
+import { APP_VERSION, BUILD_TIMESTAMP, BUILD_HASH } from '../version';
+import VersionBadge from './VersionBadge';
+import GoogleAuthButton from './GoogleAuthButton';
 import {
   BookOpen,
   Trophy,
@@ -13,7 +16,8 @@ import {
   Calendar,
   Layers,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 
 interface ExamSetupViewProps {
@@ -26,6 +30,9 @@ interface ExamSetupViewProps {
   onOpenAnswersWindow: () => void;
   onOpenPastAnalytics: () => void;
   pastResults: TestResult[];
+  user: GoogleUser | null;
+  onLogin: (user: GoogleUser) => void;
+  onLogout: () => void;
 }
 
 export const ExamSetupView: React.FC<ExamSetupViewProps> = ({
@@ -33,6 +40,9 @@ export const ExamSetupView: React.FC<ExamSetupViewProps> = ({
   onOpenAnswersWindow,
   onOpenPastAnalytics,
   pastResults,
+  user,
+  onLogin,
+  onLogout,
 }) => {
   const [selectedYear, setSelectedYear] = useState<number | 'all'>('all');
   const [selectedSubject, setSelectedSubject] = useState<'all' | Subject>('all');
@@ -70,26 +80,31 @@ export const ExamSetupView: React.FC<ExamSetupViewProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
+          <VersionBadge />
+
           <button
             id="browse-solutions-archive-btn"
             onClick={onOpenAnswersWindow}
-            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition"
+            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
             title="Browse all 5 years questions, answers, and solutions immediately"
           >
             <BookOpen className="w-4 h-4 text-sky-400" />
-            <span>Answers & Solutions Window</span>
+            <span className="hidden md:inline">Answers & Solutions</span>
           </button>
 
           {pastResults.length > 0 && (
             <button
               id="view-past-analytics-btn"
               onClick={onOpenPastAnalytics}
-              className="flex items-center gap-1.5 bg-indigo-900/40 hover:bg-indigo-800/60 text-indigo-300 border border-indigo-700/60 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition"
+              className="flex items-center gap-1.5 bg-indigo-900/40 hover:bg-indigo-800/60 text-indigo-300 border border-indigo-700/60 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
             >
               <BarChart2 className="w-4 h-4 text-indigo-400" />
-              <span>Performance History</span>
+              <span className="hidden sm:inline">Analytics</span>
             </button>
           )}
+
+          {/* Google Sign In / Profile */}
+          <GoogleAuthButton user={user} onLogin={onLogin} onLogout={onLogout} />
         </div>
       </nav>
 
@@ -128,6 +143,56 @@ export const ExamSetupView: React.FC<ExamSetupViewProps> = ({
               <div className="text-slate-400 font-medium">Solution Window</div>
               <div className="text-lg font-bold text-amber-400 font-mono">Step-by-Step</div>
             </div>
+          </div>
+        </div>
+
+        {/* Candidate Identity Status Card */}
+        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            {user?.picture ? (
+              <img
+                src={user.picture}
+                alt={user.name}
+                className="w-10 h-10 rounded-full border-2 border-sky-500 object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-sky-600/30 border border-sky-500/50 flex items-center justify-center text-sky-300 font-bold text-sm">
+                {user ? user.name.charAt(0).toUpperCase() : <UserCheck className="w-5 h-5 text-sky-400" />}
+              </div>
+            )}
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 font-medium">Candidate Profile:</span>
+                <span className="text-sm font-bold text-white">
+                  {user ? user.name : 'AR. SunRay (Default Profile)'}
+                </span>
+                {user && (
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded font-medium flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3" /> Google Authenticated
+                  </span>
+                )}
+              </div>
+              <div className="text-xs text-slate-400 flex items-center gap-3 mt-0.5">
+                <span>{user ? user.email : 'Candidate Roll: 2403019842'}</span>
+                <span className="text-slate-600">•</span>
+                <span className="text-slate-300 font-mono text-[11px]">
+                  Roll ID: {user?.candidateRollNumber || '2403019842'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {!user ? (
+              <GoogleAuthButton user={user} onLogin={onLogin} onLogout={onLogout} />
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-emerald-400 font-mono bg-emerald-950/50 border border-emerald-800/60 px-3 py-1.5 rounded-lg">
+                  Scorecard Auto-Sync: Active
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -308,6 +373,24 @@ export const ExamSetupView: React.FC<ExamSetupViewProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Live Reflection & Version Footer */}
+        <footer className="pt-4 pb-8 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
+          <div className="flex items-center gap-2">
+            <VersionBadge compact={false} />
+            <span className="text-slate-600 hidden sm:inline">•</span>
+            <span className="hidden sm:inline">Build {BUILD_TIMESTAMP} ({BUILD_HASH})</span>
+          </div>
+
+          <div className="flex items-center gap-3 text-[11px] text-slate-500">
+            <span>JEE (Main) Mock Exam & Diagnostics Portal</span>
+            <span>•</span>
+            <span className="text-emerald-400/90 font-mono flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+              Auto-Reflect Active
+            </span>
+          </div>
+        </footer>
       </main>
     </div>
   );
